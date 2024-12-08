@@ -40,6 +40,12 @@ extern "C"
         VSM_SPV_MAX_ENUM,
     };
 
+    typedef struct VsmContextCreateInfo
+    {
+        const char *cachePath;
+        uint32_t maxCacheSize;
+    } VsmContextCreateInfo;
+
     typedef struct VsmShaderCompileInfo
     {
         const char *shaderName;
@@ -52,18 +58,24 @@ extern "C"
     {
         const char *shaderName;
         void *pNext;
-        VkShaderCreateFlagsEXT flags;
+        // VkShaderCreateFlagsEXT flags;
     } VsmShaderModuleCreateInfo;
 
     VK_DEFINE_HANDLE(VsmContext);
 
-    VsmResult vsmCreateContext(const char *cachePath, VsmContext *pContext);
+    VsmResult vsmCreateContext(const VsmContextCreateInfo *pCreateInfo, VkAllocationCallbacks *pAllocator, VsmContext *pContext);
 
-    void vsmDestroyContext(VsmContext context);
+    void vsmDestroyContext(VsmContext context, const VkAllocationCallbacks *pAllocator);
 
     VsmResult vsmCompileShader(VsmContext context, const VsmShaderCompileInfo *pCompileInfo);
 
-    VsmResult vsmCreateShaderModule(VsmContext context, const VsmShaderModuleCreateInfo *pCreateInfo, VkShaderModule *pShaderModule);
+    VsmResult vsmFindShader(VsmContext context, const char *shaderName, VkBool32 *pFound);
+
+    VsmResult vsmRemoveShader(VsmContext context, const char *shaderName);
+
+    VsmResult vsmClearShaderCache(VsmContext context);
+
+    VsmResult vsmCreateShaderModule(VsmContext context, const VsmShaderModuleCreateInfo *pCreateInfo, const VkAllocationCallbacks *pAllocator, VkShaderModule *pShaderModule);
 
 #ifdef __cplusplus
 }
