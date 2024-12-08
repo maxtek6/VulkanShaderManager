@@ -1,14 +1,11 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.10)
 
 project(VulkanShaderManager)
 
-find_package(Vulkan REQUIRED)
+find_package(Vulkan REQUIRED COMPONENTS glslang)
+
+set(VSM_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_subdirectory(sqlite)
+add_subdirectory(src)
 
-add_library(VulkanShaderManager SHARED
-    VulkanShaderManager.cpp
-    VulkanShaderManager.h
-)
-
-target_link_libraries(VulkanShaderManager PRIVATE sqlite3 Vulkan::Vulkan Vulkan::glslang)

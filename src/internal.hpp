@@ -1,17 +1,38 @@
+/*
+ * Copyright 2024 Maxtek Consulting
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+#ifndef INTERNAL_HPP
+#define INTERNAL_HPP
+
 #include "vk_shader_manager.h"
+
 #include <glslang/Include/glslang_c_interface.h>
+#include <sqlite3.h>
 
-#include "sqlite3ext.h"
-#include "sqlite3.h"
-
+#include <atomic>
+#include <filesystem>
 #include <fstream>
 #include <memory>
 #include <unordered_map>
-
-struct VsmContext_T
-{
-    int id;
-};
 
 namespace vsm
 {
@@ -19,43 +40,42 @@ namespace vsm
     {
     private:
         VsmResult _result;
-
     public:
         exception(VsmResult result) : _result(result) {}
         const char *what() const noexcept override { return nullptr; }
         VsmResult result() const { return _result; }
     };
 
-    class cache
+    void glsl_preprocess(std::unique_ptr<glslang_shader_t, decltype(&glslang_shader_delete)>& shader, const glslang_input_t *input);
+    void glsl_parse(std::unique_ptr<glslang_shader_t, decltype(&glslang_shader_delete)>& shader, const glslang_input_t *input);
+    void glsl_link(std::unique_ptr<glslang_program_t, decltype(&glslang_program_delete)>& program, int messages);
+
+    class compiler
     {
     private:
-        static void close_db(sqlite3 *db);
-        static std::unique_ptr<sqlite3, decltype(close_db)> open_db(const std::string &path);
-        std::unique_ptr<sqlite3, decltype(close_db)> _db;
+        glslang_target_client_version_t _vk_version;
+        glslang_target_language_version_t _spv_version;
     public:
-        cache(const std::string &path);
-        ~cache() = default;
-
+        compiler(VsmVulkanVersion vk_version, VsmSPVVersion spv_version);
+        ~compiler() = default;
+        void compile(const std::string &name, VsmShaderStage stage, const std::string &source, std::vector<uint32_t> &code);
     };
 
-    class context
+    class repository
     {
     private:
-        static std::unordered_map<int, std::shared_ptr<context>> _contexts;
-        static int _next_id;
-
-        std::unique_ptr<cache> _cache;
+        static std::unique_ptr<sqlite3, decltype(&sqlite3_close)> &&open_db(const std::string &path, bool shared);
+        static void init_db(std::unique_ptr<sqlite3, decltype(&sqlite3_close)> &db);
+        std::unique_ptr<sqlite3, decltype(&sqlite3_close)> _db;
 
     public:
-        static int create(const std::string &cache_path);
-
-        static void destroy(int id);
-
-        static std::shared_ptr<context> get(int id);
-
-        context(const std::string &cache_path);
-
-        ~context() = default;
+        repository(const std::string &path, bool shared);
+        ~repository() = default;
+        void store(const std::string &name, VsmShaderStage stage, const std::vector<uint32_t> &code);
+        void load(const std::string &name, std::vector<uint32_t> &code);
+        void remove(const std::string &name);
+        std::pair<bool, VsmShaderStage> query(const std::string &name);
+        void clear();
     };
 
     void create_context(const VsmContextCreateInfo *pCreateInfo, const VkAllocationCallbacks *pAllocator, VsmContext *pContext);
@@ -64,11 +84,19 @@ namespace vsm
 
     void compile_shader(VsmContext context, const VsmShaderCompileInfo *pCompileInfo);
 
-    void find_shader(VsmContext context, const char *shaderName, VkBool32 *pFound);
+    void query_shader(VsmContext context, const char *shaderName, VkBool32 *pFound, VsmShaderStage *pShaderStage);
 
     void remove_shader(VsmContext context, const char *shaderName);
 
-    void clear_shader_cache(VsmContext context);
+    void clear_shaders(VsmContext context);
 
     void create_shader_module(VsmContext context, const VsmShaderModuleCreateInfo *pCreateInfo, const VkAllocationCallbacks *pAllocator, VkShaderModule *pShaderModule);
 }
+
+struct VsmContext_T
+{
+    std::unique_ptr<vsm::compiler> compiler;
+    std::unique_ptr<vsm::repository> repository;
+};
+
+#endif
