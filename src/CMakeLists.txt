@@ -1,5 +1,7 @@
 file(GLOB_RECURSE SOURCES "*.cpp" "*.hpp")
 
+set(CMAKE_CXX_STANDARD 17)
+
 add_library(vsm_a STATIC ${SOURCES})
 target_include_directories(vsm_a PUBLIC ${VSM_INCLUDE_DIR})
 target_link_libraries(vsm_a PRIVATE sqlite3 Vulkan::Vulkan Vulkan::glslang)

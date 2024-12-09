@@ -61,20 +61,21 @@ namespace vsm
         void compile(const std::string &name, VsmShaderStage stage, const std::string &source, std::vector<uint32_t> &code);
     };
 
+    bool file_exists(const std::string &path);
+
     class repository
     {
     private:
         static std::unique_ptr<sqlite3, decltype(&sqlite3_close)> &&open_db(const std::string &path, bool shared);
         static void init_db(std::unique_ptr<sqlite3, decltype(&sqlite3_close)> &db);
         std::unique_ptr<sqlite3, decltype(&sqlite3_close)> _db;
-
     public:
         repository(const std::string &path, bool shared);
         ~repository() = default;
         void store(const std::string &name, VsmShaderStage stage, const std::vector<uint32_t> &code);
         void load(const std::string &name, std::vector<uint32_t> &code);
-        void remove(const std::string &name);
         std::pair<bool, VsmShaderStage> query(const std::string &name);
+        void remove(const std::string &name);
         void clear();
     };
 
