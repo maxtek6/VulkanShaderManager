@@ -22,11 +22,6 @@
 
 #include "internal.hpp"
 
-bool vsm::file_exists(const std::string &path)
-{
-    return std::filesystem::exists(path);
-}
-
 std::unique_ptr<sqlite3, decltype(&sqlite3_close)> &&vsm::repository::open_db(const std::string &path, bool shared)
 {
     int mutex_flags = shared ? SQLITE_OPEN_FULLMUTEX : SQLITE_OPEN_NOMUTEX;
@@ -35,7 +30,7 @@ std::unique_ptr<sqlite3, decltype(&sqlite3_close)> &&vsm::repository::open_db(co
     const char *filename = path.c_str();
 
     // attempt to create new database
-    if (path.empty())
+    if (path.empty() && !std::filesystem::exists(path))
     {
         open_flags |= SQLITE_OPEN_CREATE;
     }

@@ -61,8 +61,6 @@ namespace vsm
         void compile(const std::string &name, VsmShaderStage stage, const std::string &source, std::vector<uint32_t> &code);
     };
 
-    bool file_exists(const std::string &path);
-
     class repository
     {
     private:
