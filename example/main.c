@@ -23,13 +23,20 @@
 #include "vk_shader_manager.h"
 
 #include <stdio.h>
-#include <stdbool.h>
 
 int main(int argc, char **argv)
 {
     if (argc >= 2)
     {
-
+        VsmContext ctx;
+        VsmContextCreateInfo create_info = {
+            argv[1],
+            false,
+            VSM_VULKAN_1_2,
+            VSM_SPV_1_5,
+        };
+        VsmResult result;
+        result = vsmCreateContext(&create_info, NULL, &ctx);
     }
     else
     {

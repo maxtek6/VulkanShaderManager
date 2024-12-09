@@ -30,6 +30,7 @@
  */
 
 #include <vulkan/vulkan.h>
+#include <stdbool.h>
 
 #ifdef _WIN32
 #define VSM_API_CALL __declspec(dllexport)
@@ -45,7 +46,7 @@ extern "C"
     /**
      * @brief VSM status codes
      */
-    typedef enum VsmResult
+    typedef enum
     {
         VSM_SUCCESS = 0,
         VSM_ERROR_NULL_HANDLE,
@@ -65,24 +66,24 @@ extern "C"
         VSM_ERROR_COMPILE_PARSE,
         VSM_ERROR_COMPILE_LINK,
         VSM_ERROR_CREATE_MODULE,
-    };
+    } VsmResult;
 
     /**
      * @brief VSM Vulkan versions
      */
-    typedef enum VsmVulkanVersion
+    typedef enum
     {
         VSM_VULKAN_1_0,
         VSM_VULKAN_1_1,
         VSM_VULKAN_1_2,
         VSM_VULKAN_1_3,
         VSM_VULKAN_MAX_ENUM,
-    };
+    } VsmVulkanVersion;
 
     /**
      * @brief VSM SPIR-V versions
      */
-    typedef enum VsmSPVVersion
+    typedef enum
     {
         VSM_SPV_1_0,
         VSM_SPV_1_1,
@@ -92,12 +93,12 @@ extern "C"
         VSM_SPV_1_5,
         VSM_SPV_1_6,
         VSM_SPV_MAX_ENUM,
-    };
+    } VsmSPVVersion;
 
     /**
      * @brief VSM shader stages
      */
-    typedef enum VsmShaderStage
+    typedef enum
     {
         VSM_SHADER_VERTEX,
         VSM_SHADER_TESS_CONTROL,
@@ -114,8 +115,11 @@ extern "C"
         VSM_SHADER_TASK,
         VSM_SHADER_MESH,
         VSM_SHADER_MAX_ENUM,
-    };
+    } VsmShaderStage;
 
+    /**
+     * @brief VSM context create info
+     */
     typedef struct VsmContextCreateInfo
     {
         const char *repositoryPath;
@@ -124,6 +128,12 @@ extern "C"
         VsmSPVVersion spvVersion;
     } VsmContextCreateInfo;
 
+    /**
+     * @brief VSM shader compile info
+     * @param shaderName The name used to identify compiled shader
+     * @param shaderSource The GLSL source code to compile
+     * @param shaderStage The stage where shader will be used
+     */
     typedef struct VsmShaderCompileInfo
     {
         const char *shaderName;
@@ -131,6 +141,13 @@ extern "C"
         VsmShaderStage shaderStage;
     } VsmShaderCompileInfo;
 
+    /**
+     * @brief VSM shader module create info
+     * @param device The Vulkan logical device used to creates the shader module
+     * @param shaderName The name of the shader to create the module from
+     * @param pNext Should be NULL
+     * @param flags Reserved for future use
+     */
     typedef struct VsmShaderModuleCreateInfo
     {
         VkDevice device;
