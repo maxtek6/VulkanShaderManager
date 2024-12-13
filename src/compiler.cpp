@@ -115,14 +115,16 @@ void vsm::compiler::compile(const std::string &name, VsmShaderStage stage, const
         false,
         false,
         GLSLANG_MSG_DEFAULT_BIT,
-        nullptr,
+        glslang_default_resource(),
     };
 
     std::unique_ptr<glslang_shader_t, decltype(&glslang_shader_delete)> shader(glslang_shader_create(&input), glslang_shader_delete);
     std::unique_ptr<glslang_program_t, decltype(&glslang_program_delete)> program(glslang_program_create(), glslang_program_delete);
 
+    //glslang_initialize_process();
     vsm::glsl_preprocess(shader, &input);
     vsm::glsl_parse(shader, &input);
+    glslang_program_add_shader(program.get(), shader.get());
     vsm::glsl_link(program, GLSLANG_MSG_SPV_RULES_BIT | GLSLANG_MSG_VULKAN_RULES_BIT);
     glslang_program_SPIRV_generate(program.get(), stage_map.at(stage));
     code.resize(glslang_program_SPIRV_get_size(program.get()));

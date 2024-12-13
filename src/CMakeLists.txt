@@ -1,6 +1,6 @@
 add_library(vsm_a STATIC ${VSM_SOURCES})
 target_include_directories(vsm_a PUBLIC ${VSM_INCLUDE_DIR})
-target_link_libraries(vsm_a PUBLIC sqlite3 Vulkan::Vulkan Vulkan::glslang Vulkan::shaderc_combined Vulkan::SPIRV-Tools)
+target_link_libraries(vsm_a PUBLIC ${VSM_LIBS})
 
 #TODO: there is an issue with building shared library on Windows
 #add_library(vsm SHARED ${VSM_SOURCES})

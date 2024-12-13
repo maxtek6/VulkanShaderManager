@@ -39,6 +39,11 @@
 #define TEST_FAIL 1
 #define TEST_ASSERT(COND) test_assert((COND), __FILE__, __FUNCTION_NAME__, __LINE__, #COND)
 
+const std::string shader_source =
+    "#version 430\n"
+    "void main(){\n"
+    "}\n";
+
 static void test_assert(
     bool condition,
     const std::string &file,
@@ -51,7 +56,7 @@ namespace api
 {
     static void create_context();
     static void destroy_context();
-    static void compile_shader(){}
+    static void compile_shader();
     static void query_shader(){}
     static void remove_shader(){}
     static void clear_shaders(){}
@@ -131,9 +136,38 @@ void api::destroy_context()
         VSM_SPV_1_5,
     };
     VsmContext context;
-    // discardd the result
+    // discard the result
     static_cast<void>(vsmCreateContext(&create_info, nullptr, &context));
-    // double free, should never throw error
     vsmDestroyContext(context, nullptr);
+    vsmDestroyContext(nullptr, nullptr);
+}
+
+void api::compile_shader()
+{
+    VsmContextCreateInfo create_info = {
+        nullptr,
+        false,
+        VSM_VULKAN_1_2,
+        VSM_SPV_1_5,
+    };
+    VsmShaderCompileInfo compile_info = {
+        "test",
+        shader_source.c_str(),
+        VSM_SHADER_COMPUTE,
+    };
+    VsmContext context;
+    VsmResult result;
+
+    static_cast<void>(vsmCreateContext(&create_info, nullptr, &context));
+    
+    result = vsmCompileShader(nullptr, &compile_info);
+    TEST_ASSERT(result == VSM_ERROR_INVALID_CONTEXT);
+    
+    result = vsmCompileShader(context, nullptr);
+    TEST_ASSERT(result == VSM_ERROR_NULL_HANDLE);   
+
+    result = vsmCompileShader(context, &compile_info);
+    TEST_ASSERT(result == VSM_SUCCESS);
+
     vsmDestroyContext(context, nullptr);
 }

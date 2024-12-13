@@ -22,7 +22,7 @@
 
 #include "internal.hpp"
 
-std::unique_ptr<sqlite3, decltype(&sqlite3_close)> &&vsm::repository::open_db(const std::string &path, bool shared)
+std::unique_ptr<sqlite3, decltype(&sqlite3_close)> vsm::repository::open_db(const std::string &path, bool shared)
 {
     int mutex_flags = shared ? SQLITE_OPEN_FULLMUTEX : SQLITE_OPEN_NOMUTEX;
     int open_flags = SQLITE_OPEN_READWRITE;
